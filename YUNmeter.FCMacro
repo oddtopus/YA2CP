@@ -1,0 +1,58 @@
+# -*- coding: utf-8 -*-
+#
+#  arduini.py
+#  
+#  Copyright 2017 (oddtopus)
+#  
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#  
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#  
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+#  MA 02110-1301, USA.
+#  
+#(c) 2016 R. T. LGPL3
+
+__title__="YUNmeter"
+__author__="oddtopus"
+__url__="github.com/oddtopus/..."
+__license__="LGPL 3"
+__doc__='''
+Client frontend to get measures of distance from an ArduinoYUN.
+Materials requested:
+  - Arduino YUN running the script "srf02overWiFy.ino" and connected
+    to the same WiFi network of the PC.
+  - SRF02 (or similar) ultrasonic range finder connected to Arduino
+    as one I2C device.
+    
+    For FreeCAD.
+'''  
+
+from PySide import QtCore, QtGui
+from os.path import join, dirname, abspath
+import arduini, FreeCAD, FreeCADGui
+
+class measureDialog:
+  def __init__(self):
+    dialogPath=join(dirname(abspath(__file__)),"YUNmeterDialogFC.ui")
+    self.form=FreeCADGui.PySideUic.loadUi(dialogPath)
+    self.board=arduini.YUN()
+  def accept(self):
+    try:
+      risp=self.board.request(command='srf',address=self.form.edit1.text())
+      if risp: 
+        if self.form.radio2.isChecked():
+          self.form.lcd.display(int(float(risp.strip())/2.54))
+        else:
+          self.form.lcd.display(int(risp.strip()))
+    except: FreeCAD.Console.PrintError('Server is not ready\n')
+
+FreeCADGui.Control.showDialog(measureDialog())
